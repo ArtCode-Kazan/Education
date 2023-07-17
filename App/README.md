@@ -22,6 +22,59 @@ http://localhost:3789/get.
 
 В результате выполнения запроса будет возвращена строка с текстом.
 
+## Создание образа
+Находясь в директории dbase-service, нужно выполнить команду:
+```commandline
+docker build -t image-name .
+```
+
+## Запуск контейнера с базой данных
+Для взаимодействия с базой данных необходимо создать подключение
+psycopg2.connection() и передать туда параметры базы данных.
+POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB задаются при
+создании образа. POSTGRES_PORT и POSTGRES_HOST задаются
+при запуске контейнера. Используется следующая команда:
+```commandline
+docker run --name container-name -p host:local-port:container-port image-name
+```
+
+## Запуск сервиса с подключением базы данных
+Параметры базы данных хранятся в контейнере. Из-за этого при попытке запуска
+сервиса вне контейнера, не удастся получить эти параметры методом os.environ,
+который используется в модуле connection.py. Модуль connection в текущем виде
+предназначен для использования его в docker compose, где будет возможность
+получить необходимые параметры базы данных. Для запуска сервиса вне контейнера
+(на локальном компьютере) необходимо внести некоторые изменения. Создать файл
+под названием .env в директории service. Заполнить его необходимыми
+параметрами. POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB можно посмотреть
+в Dockerfile, POSTGRES_PORT и POSTGRES_HOST указываются при запуске 
+контейнера, нужно вписать эти значения. Файл .env может выглядеть так:
+```commandline
+POSTGRES_DB=test-db
+POSTGRES_USER=test-user
+POSTGRES_PASSWORD=password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=7777
+```
+Также необходимо внести изменения в модуль connection.py. В pyproject.toml
+уже добавлена библиотека dotenv. Импортируем ее
+```commandline
+from dotenv import load_dotenv
+```
+Загружаем переменные окружения
+```commandline
+load_dotenv()
+```
+Заменяем все os.environ на os.getenv, также меняем квадратные скобки на
+круглые, например:
+```commandline
+dbname=os.getenv('POSTGRES_DB')
+```
+На этом всё, можно запускать сервис командой:
+```commandline
+python3.8 main.py
+```
+
 
 # Задание
 1. Клонировать репозиторий Education в свое удаленное хранилище репозиториев.
