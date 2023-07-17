@@ -1,7 +1,7 @@
 """Main module."""
 
 import uvicorn
-from connection import create_connection
+from service.connection import create_connection
 from fastapi import FastAPI
 
 app = FastAPI()
